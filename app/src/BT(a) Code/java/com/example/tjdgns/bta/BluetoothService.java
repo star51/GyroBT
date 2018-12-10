@@ -5,20 +5,16 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
-public class BluetoothService{
+public class BluetoothService {
     //intent request
     private static final int REQUEST_CONNEXT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
@@ -44,7 +40,6 @@ public class BluetoothService{
     private BluetoothAdapter btAdapter;
     private Activity mActivity;
     private Handler mHandler;
-
 
     //bluetoothService 생성자
     public BluetoothService(Activity activity, Handler handler) {

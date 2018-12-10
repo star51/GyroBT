@@ -1,12 +1,7 @@
 package com.example.tjdgns.bta;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -14,12 +9,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.DecimalFormat;
-
-public class MainActivity extends AppCompatActivity  implements SensorEventListener {
+public class MainActivity extends AppCompatActivity {
 
     private static final boolean D = true;
     //debugging
@@ -41,18 +33,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     public static final int MESSAGE_STATE_CHANGE = 1;
     public static final int MESSAGE_WRITE = 2;
 
-    float accelXValue;
-    float accelYValue;
-    float accelZValue;
 
-    private SensorManager mSensorManager;
-    private Sensor accSensor;
-
-    TextView x1;
-    TextView y1;
-    TextView z1;
-
-    DecimalFormat df = new DecimalFormat("0.0"); //float 형의 소수점 지정
 
     //layout
     private Button btn_Connect;
@@ -92,7 +73,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                     String writeMessage = null ;
 
                     if ( mSelectedBtn == 1 ) {
-                        writeMessage = mbtn1.getText().toString();
+                        writeMessage = mbtn1.getText().toString() ;
                         mSelectedBtn = -1 ;
                     } else if ( mSelectedBtn == 2 ) {
                         writeMessage = mbtn2.getText().toString() ;
@@ -124,12 +105,6 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         mbtn1.setOnClickListener(mClickListener);
         mbtn2 = (Button)findViewById(R.id.btn2);
         mbtn2.setOnClickListener(mClickListener);
-        x1 = (TextView) findViewById(R.id.TextViewX);
-        y1 = (TextView) findViewById(R.id.TextViewY);
-        z1 = (TextView) findViewById(R.id.TextViewZ);
-
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         if(bluetoothService_obj == null)
             bluetoothService_obj = new BluetoothService(this, mHandler);
@@ -137,17 +112,6 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     }
 
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mSensorManager.registerListener(this, accSensor,SensorManager.SENSOR_DELAY_NORMAL);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mSensorManager.unregisterListener(this);
-    }
 
     /*블루투스 접속에 따른 결과를 처리하는 메소드 이다.*/
     @Override
@@ -184,6 +148,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private View.OnClickListener mClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+
             //분기.
             switch ( v.getId() ){
 
@@ -201,7 +166,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                 case R.id.btn1 :
                     //연결된 상태에서만 값을 보낸다.
                     if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
-                        sendMessage("s", MODE_REQUEST);
+                        sendMessage("0", MODE_REQUEST);
                         mSelectedBtn = 1;
                     }else {
                         Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
@@ -223,30 +188,6 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             }//switch
         }
     };
-
-    public void onSensorChanged(SensorEvent event) {
-        Sensor sensor = event.sensor;
-
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-            accelXValue = event.values[0];
-            accelYValue = event.values[1];
-            accelZValue = event.values[2];
-
-            accelXValue = Float.parseFloat(df.format(accelXValue));
-            accelYValue = Float.parseFloat(df.format(accelYValue));
-            accelZValue = Float.parseFloat(df.format(accelZValue));
-
-            x1.setText("X: "+accelXValue);
-            y1.setText("Y: "+accelYValue);
-            z1.setText("Z: "+accelZValue);
-
-            String val = (accelXValue + "X" + accelYValue + "Y" + "\0");
-
-            if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
-                sendMessage(val, MODE_REQUEST);
-            }
-        }
-    }
 
     /*메시지를 보낼 메소드 정의*/
     private synchronized void sendMessage( String message, int mode ) {
@@ -280,10 +221,6 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
         mSendingState = STATE_NO_SENDING ;
         notify() ;
-    }
-
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
     }
 
 }
