@@ -20,6 +20,7 @@
 
     <Button
         android:id="@+id/btn1"
+        android:enabled="true"
         android:text="Start"
         android:textColor="#FFFFFF"
         android:layout_width="160dp"
@@ -30,6 +31,7 @@
 
     <Button
         android:id="@+id/btn2"
+        android:enabled="true"
         android:text="End"
         android:textColor="#FFFFFF"
         android:layout_width="160dp"
@@ -69,6 +71,17 @@
                 android:text="z"
                 android:layout_below="@+id/TextViewY"
                 android:layout_marginTop="20dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="200dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/Time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00:00"/>
         </LinearLayout>
     </LinearLayout>
 

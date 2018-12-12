@@ -9,6 +9,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -41,6 +42,10 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     public static final int MESSAGE_STATE_CHANGE = 1;
     public static final int MESSAGE_WRITE = 2;
 
+    // 게임 상태
+    public static int gState;
+
+    //가속도 센서
     float accelXValue;
     float accelYValue;
     float accelZValue;
@@ -52,6 +57,15 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     TextView y1;
     TextView z1;
 
+    // 타이머
+    TextView timer;
+    long mBaseTime;
+
+    final static int IDLE = 0;
+    final static int RUNNING = 1;
+
+    int tState = IDLE;//처음 상태는 IDLE
+
     DecimalFormat df = new DecimalFormat("0.0"); //float 형의 소수점 지정
 
     //layout
@@ -62,6 +76,14 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private BluetoothService bluetoothService_obj = null;
     private StringBuffer mOutStringBuffer;
 
+    Handler mTimer = new Handler(){
+        public void handleMessage(Message msg){
+            timer.setText(getTimeOut());
+
+            //sendEmptyMessage 는 비어있는 메세지를 Handler 에게 전송하는겁니다.
+            mTimer.sendEmptyMessage(0);
+        }
+    };
 
     //핸들러의 기능을 수행할 클래스(handleMessage)
     private final Handler mHandler = new Handler() {
@@ -127,6 +149,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         x1 = (TextView) findViewById(R.id.TextViewX);
         y1 = (TextView) findViewById(R.id.TextViewY);
         z1 = (TextView) findViewById(R.id.TextViewZ);
+        timer = (TextView) findViewById(R.id.Time);
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -136,6 +159,13 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         mOutStringBuffer = new StringBuffer("");
     }
 
+    @Override
+
+    protected void onDestroy() {
+        mTimer.removeMessages(0);//메시지를 지워서 메모리릭 방지
+        super.onDestroy();
+
+    }
 
     @Override
     protected void onResume() {
@@ -200,23 +230,45 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
                 case R.id.btn1 :
                     //연결된 상태에서만 값을 보낸다.
-                    if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
-                        sendMessage("s", MODE_REQUEST);
-                        mSelectedBtn = 1;
-                    }else {
-                        Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
-                    }
+//                    if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
+//                        sendMessage("s", MODE_REQUEST);
+//                        gState = 1;
+//                        mSelectedBtn = 1;
+//
+//                        //타이머에 현재 값 세팅
+//                        mBaseTime = SystemClock.elapsedRealtime();
+//                        mTimer.sendEmptyMessage(0);
+//
+//                    }else {
+//                        Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
+//                    }
+                    mBaseTime = SystemClock.elapsedRealtime();
+                    mTimer.sendEmptyMessage(0);
+
+                    mbtn1.setEnabled(false);
+                    mbtn2.setEnabled(true);
                     break ;
 
                 case R.id.btn2 :
+//                    if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
+//                        sendMessage( "f", MODE_REQUEST ) ;
+//                        gState = 0;
+//                        mSelectedBtn = 2 ;
+//
+//                        mTimer.removeMessages(0);
+//
+//                        mbtn1.setEnabled(true);
+//                        mbtn2.setEnabled(false);
+//                        break;
+//                    }else {
+//                        Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
+//                    }
+//                    break ;
+                    mTimer.removeMessages(0);
 
-                    if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
-                        sendMessage( "1", MODE_REQUEST ) ;
-                        mSelectedBtn = 2 ;
-                    }else {
-                        Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
-                    }
-                    break ;
+                    mbtn1.setEnabled(true);
+                    mbtn2.setEnabled(false);
+                    break;
 
                 default: break ;
 
@@ -286,4 +338,10 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     }
 
+    String getTimeOut(){
+        long now = SystemClock.elapsedRealtime();
+        long outTime = now - mBaseTime;
+        String easy_outTime = String.format("%02d:%02d:%02d", outTime/1000 / 60, (outTime/1000)%60,(outTime%1000)/10);
+        return easy_outTime;
+    }
 }

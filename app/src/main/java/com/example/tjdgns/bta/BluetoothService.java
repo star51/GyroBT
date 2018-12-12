@@ -45,6 +45,8 @@ public class BluetoothService{
     private Activity mActivity;
     private Handler mHandler;
 
+    byte[] mbuffer = new byte[1024];
+
 
     //bluetoothService 생성자
     public BluetoothService(Activity activity, Handler handler) {
@@ -304,7 +306,7 @@ public class BluetoothService{
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
 
-// BluetoothSocket의 inputstream 과 outputstream을 얻는다.
+            // BluetoothSocket의 inputstream 과 outputstream을 얻는다.
             try {
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
@@ -321,11 +323,20 @@ public class BluetoothService{
             byte[] buffer = new byte[1024];
             int bytes;
 
-// Keep listening to the InputStream while connected
+            // Keep listening to the InputStream while connected
             while (true) {
                 try {
-// InputStream으로부터 값을 받는 읽는 부분(값을 받는다)
+                    // InputStream으로부터 값을 받는 읽는 부분(값을 받는다)
                     bytes = mmInStream.read(buffer);
+                    if(bytes != -1)
+                    {
+                        //buffer_b 에 buffer 를 1byte copy
+                        String str = new String(buffer,0,bytes);
+                        if(str == "e" || str == "ee")
+                        {
+                            MainActivity.gState = 0;
+                        }
+                    }
 
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
