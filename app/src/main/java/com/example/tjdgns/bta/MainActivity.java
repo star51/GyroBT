@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     TextView z1;
 
     // 타이머
+    TextView readBuf;
     TextView timer;
     long mBaseTime;
 
@@ -65,6 +66,8 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     final static int RUNNING = 1;
 
     int tState = IDLE;//처음 상태는 IDLE
+
+    public static String checkVal;
 
     DecimalFormat df = new DecimalFormat("0.0"); //float 형의 소수점 지정
 
@@ -150,6 +153,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         y1 = (TextView) findViewById(R.id.TextViewY);
         z1 = (TextView) findViewById(R.id.TextViewZ);
         timer = (TextView) findViewById(R.id.Time);
+        readBuf = (TextView) findViewById(R.id.readbuf);
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -230,45 +234,49 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
                 case R.id.btn1 :
                     //연결된 상태에서만 값을 보낸다.
-//                    if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
-//                        sendMessage("s", MODE_REQUEST);
-//                        gState = 1;
-//                        mSelectedBtn = 1;
-//
-//                        //타이머에 현재 값 세팅
-//                        mBaseTime = SystemClock.elapsedRealtime();
-//                        mTimer.sendEmptyMessage(0);
-//
-//                    }else {
-//                        Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
-//                    }
-                    mBaseTime = SystemClock.elapsedRealtime();
-                    mTimer.sendEmptyMessage(0);
+                    if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
+                        sendMessage("s", MODE_REQUEST);
+                        gState = 1;
+                        tState = RUNNING;
+                        mSelectedBtn = 1;
 
-                    mbtn1.setEnabled(false);
-                    mbtn2.setEnabled(true);
+                        //타이머에 현재 값 세팅
+                        mBaseTime = SystemClock.elapsedRealtime();
+                        mTimer.sendEmptyMessage(0);
+                        mbtn1.setEnabled(false);
+                        mbtn2.setEnabled(true);
+
+                    }else {
+                        Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
+                    }
+//                    mBaseTime = SystemClock.elapsedRealtime();
+//                    mTimer.sendEmptyMessage(0);
+//
+//                    mbtn1.setEnabled(false);
+//                    mbtn2.setEnabled(true);
                     break ;
 
                 case R.id.btn2 :
-//                    if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
-//                        sendMessage( "f", MODE_REQUEST ) ;
-//                        gState = 0;
-//                        mSelectedBtn = 2 ;
-//
-//                        mTimer.removeMessages(0);
-//
-//                        mbtn1.setEnabled(true);
-//                        mbtn2.setEnabled(false);
-//                        break;
-//                    }else {
-//                        Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
-//                    }
-//                    break ;
-                    mTimer.removeMessages(0);
+                    if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
+                        sendMessage( "f", MODE_REQUEST ) ;
+                        gState = 0;
+                        tState = IDLE;
+                        mSelectedBtn = 2 ;
 
-                    mbtn1.setEnabled(true);
-                    mbtn2.setEnabled(false);
-                    break;
+                        mTimer.removeMessages(0);
+
+                        mbtn1.setEnabled(true);
+                        mbtn2.setEnabled(false);
+                        break;
+                    }else {
+                        Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
+                    }
+                    break ;
+//                    mTimer.removeMessages(0);
+//
+//                    mbtn1.setEnabled(true);
+//                    mbtn2.setEnabled(false);
+//                    break;
 
                 default: break ;
 
@@ -288,18 +296,23 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             accelYValue = Float.parseFloat(df.format(accelYValue));
             accelZValue = Float.parseFloat(df.format(accelZValue));
 
+            accelXValue = convertVal(accelXValue);
+            accelYValue = convertVal(accelYValue);
+            accelZValue = convertVal(accelZValue);
+
             x1.setText("X: "+accelXValue);
             y1.setText("Y: "+accelYValue);
             z1.setText("Z: "+accelZValue);
 
-            String val = (accelXValue + "X" + accelYValue + "Y" + "\0");
+            readBuf.setText(checkVal);
+            String val = ((char)accelXValue + "0" + (char)((accelYValue - 90) * (-1) + 90) + "1");
 
-            if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
+
+            if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED && gState == 1){
                 sendMessage(val, MODE_REQUEST);
             }
         }
     }
-
     /*메시지를 보낼 메소드 정의*/
     private synchronized void sendMessage( String message, int mode ) {
 
@@ -343,5 +356,25 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         long outTime = now - mBaseTime;
         String easy_outTime = String.format("%02d:%02d:%02d", outTime/1000 / 60, (outTime/1000)%60,(outTime%1000)/10);
         return easy_outTime;
+    }
+
+    int convertVal(float val)
+    {
+        float temp;
+        int result;
+
+        if(val >= 6.0)
+        {
+            val = (float)6.0;
+        }
+        else if(val <= -6.0)
+        {
+            val = (float)(6.0 * -1.0);
+        }
+
+        temp = val * (float)3.33;
+        result = (int)temp + 90;
+
+        return result;
     }
 }

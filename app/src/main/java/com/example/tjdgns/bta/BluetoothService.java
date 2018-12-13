@@ -332,10 +332,7 @@ public class BluetoothService{
                     {
                         //buffer_b 에 buffer 를 1byte copy
                         String str = new String(buffer,0,bytes);
-                        if(str == "e" || str == "ee")
-                        {
-                            MainActivity.gState = 0;
-                        }
+                        MainActivity.checkVal = str;
                     }
 
                 } catch (IOException e) {
