@@ -3,6 +3,7 @@ package com.example.tjdgns.bta;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -43,7 +44,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     public static final int MESSAGE_WRITE = 2;
 
     // 게임 상태
-    public static int gState;
+    public static int gState;   // 0 : not running | 1 : running | 2 : give up
 
     //가속도 센서
     float accelXValue;
@@ -59,15 +60,27 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     // 타이머
     TextView readBuf;
+
     TextView timer;
     long mBaseTime;
+
+    // 랭크
+    TextView First;
+    TextView Second;
+    TextView Third;
+    TextView Fourth;
+    TextView Fifth;
+
+    String[] key = new String[] {"1st","2nd","3rd","4th","5th"};
+    long[] rankArr = new long[] {3599999,3599999,3599999,3599999,3599999};
 
     final static int IDLE = 0;
     final static int RUNNING = 1;
 
     int tState = IDLE;//처음 상태는 IDLE
 
-    public static String checkVal;
+    public static int checkVal = 0 ;
+    public static String bufVal ;
 
     DecimalFormat df = new DecimalFormat("0.0"); //float 형의 소수점 지정
 
@@ -75,6 +88,8 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private Button btn_Connect;
     private Button mbtn1;
     private Button mbtn2;
+    private Button mbtn3;
+
     //bluetoothservice 클래스에 접근하는 객체
     private BluetoothService bluetoothService_obj = null;
     private StringBuffer mOutStringBuffer;
@@ -104,11 +119,22 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                         //연결 성공
                         case BluetoothService.STATE_CONNECTED :
                             Toast.makeText(getApplicationContext(),"연결 성공", Toast.LENGTH_SHORT).show();
+                            btn_Connect.setEnabled(false);
+                            btn_Connect.setAlpha((float)0.3);
+                            mbtn1.setEnabled(true);
+                            mbtn1.setAlpha((float)1.0);
                             break;
 
                         //연결 실패
                         case BluetoothService.STATE_FAIL :
                             Toast.makeText(getApplicationContext(),"연결 실패", Toast.LENGTH_SHORT).show();
+                            break;
+
+
+                        case BluetoothService.STATE_LISTEN :
+                            Toast.makeText(getApplicationContext(),"연결 종료", Toast.LENGTH_SHORT).show();
+                            btn_Connect.setEnabled(true);
+                            btn_Connect.setAlpha((float)1.0);
                             break;
                     }
                     break;
@@ -128,7 +154,6 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                         // construct a string from the buffer
                         writeMessage = new String(writeBuf);
                     }
-
                     break;
             }
         }
@@ -149,26 +174,80 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         mbtn1.setOnClickListener(mClickListener);
         mbtn2 = (Button)findViewById(R.id.btn2);
         mbtn2.setOnClickListener(mClickListener);
+        mbtn3 = (Button)findViewById(R.id.btn3);
+        mbtn3.setOnClickListener(mClickListener);
+
         x1 = (TextView) findViewById(R.id.TextViewX);
         y1 = (TextView) findViewById(R.id.TextViewY);
         z1 = (TextView) findViewById(R.id.TextViewZ);
+
         timer = (TextView) findViewById(R.id.Time);
         readBuf = (TextView) findViewById(R.id.readbuf);
+        readBuf.setText("Receive data");
+
+        First = (TextView) findViewById(R.id.First);
+        Second = (TextView) findViewById(R.id.Second);
+        Third = (TextView) findViewById(R.id.Third);
+        Fourth = (TextView) findViewById(R.id.Fourth);
+        Fifth = (TextView) findViewById(R.id.Fifth);
+
+        SharedPreferences sf = getSharedPreferences("pref",0);
+
+        for(int i = 0; i<5; i++) {
+            rankArr[i] = Long.parseLong(sf.getString(key[i],"3599999"));
+        }
+        setRank();
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        if(bluetoothService_obj == null)
+        if(bluetoothService_obj == null) {
             bluetoothService_obj = new BluetoothService(this, mHandler);
+        }
         mOutStringBuffer = new StringBuffer("");
     }
 
     @Override
+    protected void onStop() {
 
+        super.onStop();
+        mTimer.removeMessages(0);//메시지를 지워서 메모리릭 방지
+        SharedPreferences sf = getSharedPreferences("pref",0);
+        SharedPreferences.Editor editor = sf.edit();
+        String str1 = String.valueOf(rankArr[0]);
+        String str2 = String.valueOf(rankArr[1]);
+        String str3 = String.valueOf(rankArr[2]);
+        String str4 = String.valueOf(rankArr[3]);
+        String str5 = String.valueOf(rankArr[4]);
+
+        editor.putString(key[0],str1);
+        editor.putString(key[1],str2);
+        editor.putString(key[2],str3);
+        editor.putString(key[3],str4);
+        editor.putString(key[4],str5);
+
+        editor.commit();
+    }
+
+    @Override
     protected void onDestroy() {
         mTimer.removeMessages(0);//메시지를 지워서 메모리릭 방지
-        super.onDestroy();
+        SharedPreferences sf = getSharedPreferences("pref",0);
+        SharedPreferences.Editor editor = sf.edit();
+        String str1 = String.valueOf(rankArr[0]);
+        String str2 = String.valueOf(rankArr[1]);
+        String str3 = String.valueOf(rankArr[2]);
+        String str4 = String.valueOf(rankArr[3]);
+        String str5 = String.valueOf(rankArr[4]);
 
+        editor.putString(key[0],str1);
+        editor.putString(key[1],str2);
+        editor.putString(key[2],str3);
+        editor.putString(key[3],str4);
+        editor.putString(key[4],str5);
+
+        editor.commit();
+        super.onDestroy();
     }
 
     @Override
@@ -237,46 +316,51 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                     if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
                         sendMessage("s", MODE_REQUEST);
                         gState = 1;
+                        checkVal = 1;
                         tState = RUNNING;
                         mSelectedBtn = 1;
 
                         //타이머에 현재 값 세팅
                         mBaseTime = SystemClock.elapsedRealtime();
                         mTimer.sendEmptyMessage(0);
+
                         mbtn1.setEnabled(false);
+                        mbtn1.setAlpha((float)0.3);
                         mbtn2.setEnabled(true);
+                        mbtn2.setAlpha((float)1.0);
 
                     }else {
                         Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
                     }
-//                    mBaseTime = SystemClock.elapsedRealtime();
-//                    mTimer.sendEmptyMessage(0);
-//
-//                    mbtn1.setEnabled(false);
-//                    mbtn2.setEnabled(true);
                     break ;
 
                 case R.id.btn2 :
                     if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED){
-                        sendMessage( "f", MODE_REQUEST ) ;
-                        gState = 0;
-                        tState = IDLE;
+                        sendMessage( "2", MODE_REQUEST ) ;
                         mSelectedBtn = 2 ;
+                        gState = 0;
+                        checkVal = 0;
+
+                        tState = IDLE;
 
                         mTimer.removeMessages(0);
 
                         mbtn1.setEnabled(true);
+                        mbtn1.setAlpha((float)1.0);
                         mbtn2.setEnabled(false);
-                        break;
+                        mbtn2.setAlpha((float)0.3);
                     }else {
                         Toast.makeText(getApplicationContext(), "블루투스 연결을 먼저 해 주세요!! ", Toast.LENGTH_SHORT).show();
                     }
                     break ;
-//                    mTimer.removeMessages(0);
-//
-//                    mbtn1.setEnabled(true);
-//                    mbtn2.setEnabled(false);
-//                    break;
+
+                case R.id.btn3 :
+                    for(int i = 0; i < 5; i++)
+                    {
+                        rankArr[i] = 3599999;
+                    }
+                    setRank();
+                    break;
 
                 default: break ;
 
@@ -286,6 +370,11 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
+
+        if( bluetoothService_obj.getState() != BluetoothService.STATE_CONNECTED){
+            btn_Connect.setEnabled(true);
+            btn_Connect.setAlpha((float)1.0);
+        }
 
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
             accelXValue = event.values[0];
@@ -304,13 +393,19 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             y1.setText("Y: "+accelYValue);
             z1.setText("Z: "+accelZValue);
 
-            readBuf.setText(checkVal);
+
             String val = ((char)accelXValue + "0" + (char)((accelYValue - 90) * (-1) + 90) + "1");
 
+            readBuf.setText(bufVal);
+            if(gState == 0 && checkVal == 1) {
+                Endgame();
+                checkVal = 0;
+            }
 
             if( bluetoothService_obj.getState() == BluetoothService.STATE_CONNECTED && gState == 1){
                 sendMessage(val, MODE_REQUEST);
             }
+
         }
     }
     /*메시지를 보낼 메소드 정의*/
@@ -326,19 +421,19 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
         mSendingState = STATE_SENDING ;
 
-// Check that we're actually connected before trying anything
+        // Check that we're actually connected before trying anything
         if ( bluetoothService_obj.getState() != BluetoothService.STATE_CONNECTED ) {
             mSendingState = STATE_NO_SENDING ;
             return ;
         }
 
-// Check that there's actually something to send
+        // Check that there's actually something to send
         if ( message.length() > 0 ) {
-// Get the message bytes and tell the BluetoothChatService to write
+            // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes() ;
             bluetoothService_obj.write(send, mode) ;
 
-// Reset out string buffer to zero and clear the edit text field
+            // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0) ;
 
         }
@@ -354,9 +449,51 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     String getTimeOut(){
         long now = SystemClock.elapsedRealtime();
         long outTime = now - mBaseTime;
-        String easy_outTime = String.format("%02d:%02d:%02d", outTime/1000 / 60, (outTime/1000)%60,(outTime%1000)/10);
+        String easy_outTime = String.format("%02d:%02d.%02d", outTime/1000 / 60, (outTime/1000)%60,(outTime%1000)/10);
         return easy_outTime;
     }
+
+    void Endgame()
+    {
+        long now = SystemClock.elapsedRealtime();
+        long outTime = now - mBaseTime;
+        long temp = 0;
+        long temp2 = 0;
+        int chk = 0;
+        tState = IDLE;
+
+        mTimer.removeMessages(0);
+
+        mbtn1.setEnabled(true);
+        mbtn1.setAlpha((float)1.0);
+        mbtn2.setEnabled(false);
+        mbtn2.setAlpha((float)0.3);
+
+        for(int i = 0; i < 5; i++)
+        {
+            if(chk == 1)
+            {
+                temp2 = rankArr[i];
+                rankArr[i] = temp;
+                temp = temp2;
+            }
+
+            if(outTime < rankArr[i] && chk == 0)
+            {
+                temp = rankArr[i];
+                rankArr[i] = outTime;
+                chk = 1;
+            }
+        }
+        setRank();
+    }
+
+    String convertTime(long outTime)
+    {
+        String mTime = String.format("%02d:%02d.%02d", outTime/1000 / 60, (outTime/1000)%60,(outTime%1000)/10);
+        return mTime;
+    }
+
 
     int convertVal(float val)
     {
@@ -377,4 +514,107 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
         return result;
     }
+
+    void setRank()
+    {
+        if(rankArr[0] != 3599999)
+            First.setText("1    " + convertTime(rankArr[0]));
+        else
+            First.setText("1    --:--.--");
+
+        if(rankArr[1] != 3599999)
+            Second.setText("2    " + convertTime(rankArr[1]));
+        else
+            Second.setText("2    --:--.--");
+
+
+        if(rankArr[2] != 3599999)
+            Third.setText("3    " + convertTime(rankArr[2]));
+        else
+            Third.setText("3    --:--.--");
+
+        if(rankArr[3] != 3599999)
+            Fourth.setText("4    " + convertTime(rankArr[3]));
+        else
+            Fourth.setText("4    --:--.--");
+
+
+        if(rankArr[4] != 3599999)
+            Fifth.setText("5    " + convertTime(rankArr[4]));
+        else
+            Fifth.setText("5    --:--.--");
+
+    }
+
+
+//
+//    void clearUI()
+//    {
+//        btn_Connect.setAlpha((float)0.0);
+//        mbtn1.setAlpha((float)0.0);
+//        mbtn2.setAlpha((float)0.0);
+//        mbtn3.((float)0.0);
+//
+//        x1.setAlpha((float)0.0);
+//        y1.setAlpha((float)0.0);
+//        z1.setAlpha((float)0.0);
+//
+//        timer.setAlpha((float)1.0);
+//        readBuf.setAlpha((float)0.0);
+//
+//        First.setAlpha((float)0.0);
+//        Second.setAlpha((float)0.0);
+//        Third.setAlpha((float)0.0);
+//        Fourth.setAlpha((float)0.0);
+//        Fifth.setAlpha((float)0.0);
+//    }
+//
+//    void setUI()
+//    {
+//        btn_Connect.setAlpha((float)1.0);
+//        mbtn1.setAlpha((float)1.0);
+//        mbtn2.setAlpha((float)1.0);
+//        mbtn3.setAlpha((float)1.0);
+//
+//        x1.setAlpha((float)1.0);
+//        y1.setAlpha((float)1.0);
+//        z1.setAlpha((float)1.0);
+//
+//        timer.setAlpha((float)0.0);
+//        readBuf.setAlpha((float)1.0);
+//
+//        First.setAlpha((float)1.0);
+//        Second.setAlpha((float)1.0);
+//        Third.setAlpha((float)1.0);
+//        Fourth.setAlpha((float)1.0);
+//        Fifth.setAlpha((float)1.0);
+//
+//    }
+//
+//
+//    // 값 불러오기
+//    private String getPreferences(String key,String outTime){
+//        SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
+//        outTime = pref.getString(key, "");
+//        return outTime;
+//    }
+//
+//    // 값 저장하기
+//    private void savePreferences(String key, long outTime){
+//
+//        String str = String.format("%02d:%02d:%02d", outTime/1000 / 60, (outTime/1000)%60,(outTime%1000)/10);
+//        SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = pref.edit();
+//        editor.putString(key, str);
+//        editor.commit();
+//    }
+//
+//    // 값(ALL Data) 삭제하기
+//    private void removeAllPreferences(){
+//        SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = pref.edit();
+//        editor.clear();
+//        editor.commit();
+//    }
+
 }

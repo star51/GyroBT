@@ -9,42 +9,61 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/bluetooth_connect"
-        android:layout_width="200dp"
-        android:layout_height="60dp"
-        android:background="@drawable/select_btn_bt"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="47dp" />
+        <Button
+            android:id="@+id/bluetooth_connect"
+            android:layout_width="200dp"
+            android:layout_height="60dp"
+            android:background="@drawable/select_btn_bt"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="47dp" />
+at+bt
 
-    <Button
-        android:id="@+id/btn1"
-        android:enabled="true"
-        android:text="Start"
-        android:textColor="#FFFFFF"
-        android:layout_width="160dp"
-        android:layout_height="100dp"
-        android:layout_centerVertical="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        <TextView
+            android:id="@+id/Time"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_below="@+id/bluetooth_connect"
+            android:textSize="40sp"
+            android:gravity="center"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginStart="77dp"
+            android:layout_marginLeft="77dp"
+            android:layout_marginTop="13dp"
+            android:text="00:00.00" />
 
-    <Button
-        android:id="@+id/btn2"
-        android:enabled="true"
-        android:text="End"
-        android:textColor="#FFFFFF"
-        android:layout_width="160dp"
-        android:layout_height="100dp"
-        android:layout_alignTop="@+id/btn1"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        <Button
+            android:id="@+id/btn1"
+            android:enabled="false"
+            android:alpha="0.3"
+            android:text="Start"
+            android:textColor="#000000"
+            android:layout_width="160dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="180dp"
+            android:layout_centerVertical="false"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <Button
+            android:id="@+id/btn2"
+            android:enabled="false"
+            android:alpha="0.3"
+            android:text="Give up"
+            android:textColor="#000000"
+            android:layout_width="160dp"
+            android:layout_height="60dp"
+            android:layout_alignTop="@+id/btn1"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="350dp"
+        android:layout_marginTop="250dp"
         android:orientation="horizontal">
+
         <LinearLayout
             android:layout_width="200dp"
             android:layout_height="match_parent"
@@ -53,6 +72,7 @@
                 android:id="@+id/TextViewX"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
                 android:text="x"/>
 
             <TextView
@@ -66,28 +86,81 @@
 
             <TextView
                 android:id="@+id/TextViewZ"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:text="z"
+                android:layout_below="@+id/TextViewY" />
+
+            <TextView
+                android:id="@+id/readbuf"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="z"
-                android:layout_below="@+id/TextViewY"
-                android:layout_marginTop="20dp" />
+                android:layout_marginTop="20dp"
+                android:text="receive"
+                android:layout_below="@+id/TextViewZ"/>
+
+            <TextView
+                android:id="@+id/tOut"
+                android:layout_width="match_parent"
+                android:layout_height="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_below="@+id/TextViewZ" />
+
+
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="200dp"
             android:layout_height="match_parent"
             android:orientation="vertical">
-            <TextView
-                android:id="@+id/Time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="00:00:00"/>
+
+            <Button
+                android:id="@+id/btn3"
+                android:text="Rank Init"
+                android:textColor="#000000"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="10dp" />
 
             <TextView
-                android:id="@+id/readbuf"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Null"/>
+                android:id="@+id/First"
+                android:layout_width="match_parent"
+                android:layout_height="15dp"
+                android:layout_marginTop="10dp"
+                android:text="0" />
+
+            <TextView
+                android:id="@+id/Second"
+                android:layout_width="match_parent"
+                android:layout_height="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_below="@+id/First"
+                android:text="0"  />
+
+            <TextView
+                android:id="@+id/Third"
+                android:layout_width="match_parent"
+                android:layout_height="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_below="@+id/Second"
+                android:text="0"  />
+
+            <TextView
+                android:id="@+id/Fourth"
+                android:layout_width="match_parent"
+                android:layout_height="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_below="@+id/Third"
+                android:text="0"  />
+
+            <TextView
+                android:id="@+id/Fifth"
+                android:layout_width="match_parent"
+                android:layout_height="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_below="@+id/Fourth"
+                android:text="0" />
+
         </LinearLayout>
     </LinearLayout>
 
